@@ -1,0 +1,848 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>AI 薅羊毛导航 - UniVibe / Routha / 各大 API 中转站</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root {
+      color-scheme: dark light;
+      --bg: #050816;
+      --bg-card: #0b1220;
+      --bg-chip: #111827;
+      --fg: #e5e7eb;
+      --fg-muted: #9ca3af;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.1);
+      --border-subtle: #1f2937;
+      --danger: #f97373;
+      --success: #4ade80;
+      --warning: #facc15;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 32px 16px 48px;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+        "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #0f172a, #020617 55%, #000 100%);
+      color: var(--fg);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page {
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+
+    .page-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 12px;
+      border: 1px solid rgba(56, 189, 248, 0.35);
+    }
+
+    .badge span {
+      font-weight: 600;
+    }
+
+    h1 {
+      margin: 12px 0 6px;
+      font-size: 26px;
+      letter-spacing: 0.02em;
+    }
+
+    .subtitle {
+      margin: 0;
+      font-size: 14px;
+      color: var(--fg-muted);
+    }
+
+    .grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    }
+
+    @media (max-width: 880px) {
+      .grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .card {
+      background: radial-gradient(circle at top left, #020617, #020617 30%, #000);
+      border-radius: 18px;
+      border: 1px solid var(--border-subtle);
+      padding: 18px 18px 16px;
+      box-shadow:
+        0 18px 40px rgba(15, 23, 42, 0.9),
+        0 0 0 1px rgba(15, 23, 42, 0.9);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      gap: 12px;
+    }
+
+    .card-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .card-title span {
+      font-size: 19px;
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--fg-muted);
+    }
+
+    .chip {
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--bg-chip);
+      border: 1px solid rgba(31, 41, 55, 0.8);
+      white-space: nowrap;
+    }
+
+    .chip-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--success);
+      box-shadow: 0 0 0 4px rgba(74, 222, 128, 0.15);
+      display: inline-block;
+      margin-right: 4px;
+    }
+
+    .chip-warning {
+      border-color: rgba(250, 204, 21, 0.7);
+      color: #facc15;
+    }
+
+    .chip-danger {
+      border-color: rgba(248, 113, 113, 0.7);
+      color: var(--danger);
+    }
+
+    .section {
+      margin-top: 8px;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .section-title span {
+      font-size: 16px;
+    }
+
+    .rank-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 13px;
+    }
+
+    .rank-item {
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      column-gap: 10px;
+      row-gap: 4px;
+      align-items: center;
+    }
+
+    .rank-number {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--accent);
+      min-width: 22px;
+      text-align: center;
+    }
+
+    .rank-main {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .rank-name-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .rank-name {
+      font-weight: 600;
+    }
+
+    .rank-tag {
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      color: var(--fg-muted);
+    }
+
+    .rank-desc {
+      font-size: 12px;
+      color: var(--fg-muted);
+    }
+
+    .rank-models {
+      font-size: 12px;
+      color: var(--fg-muted);
+    }
+
+    .rank-models strong {
+      color: var(--fg);
+      font-weight: 500;
+    }
+
+    .link-group {
+      margin-top: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-size: 11px;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .tag-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      background: rgba(15, 23, 42, 0.9);
+      font-size: 11px;
+      color: var(--fg-muted);
+    }
+
+    .tag-pill strong {
+      color: var(--fg);
+      font-weight: 500;
+    }
+
+    .tag-pill span {
+      color: var(--accent);
+    }
+
+    .site-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      font-size: 13px;
+    }
+
+    .site-item {
+      padding: 10px 10px 8px;
+      border-radius: 12px;
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    .site-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+
+    .site-name {
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .site-name span {
+      font-size: 16px;
+    }
+
+    .site-meta {
+      font-size: 12px;
+      color: var(--fg-muted);
+      margin-bottom: 4px;
+    }
+
+    .site-models {
+      font-size: 12px;
+      color: var(--fg-muted);
+      margin-bottom: 4px;
+    }
+
+    .site-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-size: 11px;
+    }
+
+    .pill-link {
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      background: rgba(15, 23, 42, 0.9);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .pill-link-label {
+      color: var(--fg-muted);
+    }
+
+    .pill-link a {
+      font-weight: 500;
+    }
+
+    code {
+      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco,
+        Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 11px;
+      background: rgba(15, 23, 42, 0.95);
+      padding: 2px 5px;
+      border-radius: 6px;
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      color: #e5e7eb;
+    }
+
+    .footer {
+      margin-top: 32px;
+      padding-top: 12px;
+      border-top: 1px dashed rgba(55, 65, 81, 0.9);
+      font-size: 11px;
+      color: var(--fg-muted);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: space-between;
+    }
+
+    .footer span {
+      white-space: nowrap;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 20px 12px 32px;
+      }
+      .card {
+        padding: 14px 14px 12px;
+      }
+      h1 {
+        font-size: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="page-header">
+      <div class="badge">
+        <span>🔍 按需找羊毛</span>
+        <span>API 中转站 & 顶级模型福利</span>
+      </div>
+      <h1>AI 薅羊毛导航 · UniVibe / Routha / 多家 API 站</h1>
+      <p class="subtitle">
+        根据性价比 + 模型覆盖综合排序，直接点链接就能薅 🧺
+      </p>
+    </header>
+
+    <section class="grid">
+      <!-- 左侧：性价比总览 -->
+      <section class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span>📊</span>
+            <div>API 中转站性价比排行</div>
+          </div>
+          <div class="chip-row">
+            <div class="chip"><span class="chip-dot"></span>注册奖励 + 拉新奖励</div>
+            <div class="chip">按次/按量价格综合排序</div>
+          </div>
+        </div>
+
+        <section class="section">
+          <h2 class="section-title">
+            <span>💎</span>超高性价比梯队
+          </h2>
+          <ol class="rank-list">
+            <li class="rank-item">
+              <div class="rank-number">1</div>
+              <div class="rank-main">
+                <div class="rank-name-row">
+                  <div class="rank-name">藏雨阁 API 站</div>
+                  <div class="rank-tag">注册送 700💲 + 拉新 250💲</div>
+                </div>
+                <div class="rank-desc">
+                  大额起步 + 拉新收益高，非常适合主力薅 gemini-2.5-pro。
+                </div>
+                <div class="rank-models">
+                  <strong>模型：</strong>仅 <strong>Gemini-2.5-Pro</strong>（约 1💲/次）。
+                </div>
+                <div class="link-group">
+                  <span class="tag-pill"><strong>注册</strong><span>🔥</span></span>
+                  <a href="http://www.guqinghan.icu/register?aff=AqyG" target="_blank" rel="noopener noreferrer">
+                    http://www.guqinghan.icu/register?aff=AqyG
+                  </a>
+                  <span class="tag-pill"><strong>OpenAI 兼容</strong></span>
+                  <code>http://www.guqinghan.icu/v1</code>
+                </div>
+              </div>
+            </li>
+
+            <li class="rank-item">
+              <div class="rank-number">2</div>
+              <div class="rank-main">
+                <div class="rank-name-row">
+                  <div class="rank-name">哈基米半公益 API 站</div>
+                  <div class="rank-tag">注册送 400💲 + 拉新 140💲</div>
+                </div>
+                <div class="rank-desc">
+                  羊毛充足，覆盖 Gemini + GPT-5/5.1，适合作为综合备用主力。
+                </div>
+                <div class="rank-models">
+                  <strong>模型：</strong>Gemini-2.5-Pro（官逆 3💲 / 满血 5💲）、
+                  Gemini-3-Pro（5💲）、GPT-5（8💲）、GPT-5.1（4💲）。
+                </div>
+                <div class="link-group">
+                  <span class="tag-pill"><strong>注册</strong><span>🎁</span></span>
+                  <a href="https://api.gemai.cc/register?aff=Xc8B" target="_blank" rel="noopener noreferrer">
+                    https://api.gemai.cc/register?aff=Xc8B
+                  </a>
+                  <span class="tag-pill"><strong>OpenAI 兼容</strong></span>
+                  <code>https://api.gemai.cc/v1</code>
+                </div>
+              </div>
+            </li>
+
+            <li class="rank-item">
+              <div class="rank-number">3</div>
+              <div class="rank-main">
+                <div class="rank-name-row">
+                  <div class="rank-name">熊猫 API 站</div>
+                  <div class="rank-tag">注册送 200💲 + 拉新 100💲</div>
+                </div>
+                <div class="rank-desc">
+                  按次略贵，但按量计费很香，适合长期稳定使用。
+                </div>
+                <div class="rank-models">
+                  <strong>模型：</strong>Gemini-2.5-Pro（按次 5–15💲）、
+                  Gemini-3-Pro（按次 17–29💲）、GPT-5（5💲）。
+                </div>
+                <div class="link-group">
+                  <span class="tag-pill"><strong>注册</strong><span>🐼</span></span>
+                  <a href="https://api520.pro/register?aff=dL62" target="_blank" rel="noopener noreferrer">
+                    https://api520.pro/register?aff=dL62
+                  </a>
+                  <span class="tag-pill"><strong>OpenAI 兼容</strong></span>
+                  <code>https://api520.pro/v1</code>
+                  <code>https://api521.pro/v1</code>
+                  <code>https://api522.pro/v1</code>
+                </div>
+              </div>
+            </li>
+
+            <li class="rank-item">
+              <div class="rank-number">4</div>
+              <div class="rank-main">
+                <div class="rank-name-row">
+                  <div class="rank-name">菠萝 API 站</div>
+                  <div class="rank-tag">注册送 200💲 + 拉新 30💲</div>
+                </div>
+                <div class="rank-desc">
+                  Gemini 价格区间友好，还能顺带白嫖 Grok-4.1。
+                </div>
+                <div class="rank-models">
+                  <strong>模型：</strong>Gemini-2.5-Pro（1–7💲）、Gemini-3-Pro（9💲）、
+                  Grok-4.1（3💲）。
+                </div>
+                <div class="link-group">
+                  <span class="tag-pill"><strong>注册</strong><span>🍍</span></span>
+                  <a href="https://www.boluoapi.cn/register?aff=WHo1" target="_blank" rel="noopener noreferrer">
+                    https://www.boluoapi.cn/register?aff=WHo1
+                  </a>
+                  <span class="tag-pill"><strong>OpenAI 兼容</strong></span>
+                  <code>http://172.98.22.45:3000/v1</code>
+                  <code>https://www.boluoapi.cn/v1</code>
+                </div>
+              </div>
+            </li>
+          </ol>
+        </section>
+
+        <section class="section">
+          <h2 class="section-title">
+            <span>💰</span>中等性价比梯队
+          </h2>
+          <ol class="rank-list">
+            <li class="rank-item">
+              <div class="rank-number">5</div>
+              <div class="rank-main">
+                <div class="rank-name-row">
+                  <div class="rank-name">沉默 API 站</div>
+                  <div class="rank-tag">注册送 3💲 + 拉新 2💲</div>
+                </div>
+                <div class="rank-desc">
+                  单次额度不大，但价格灵活，补充 GPT-5/5.1 和 Gemini 很合适。
+                </div>
+                <div class="rank-models">
+                  <strong>模型：</strong>Gemini-2.5-Pro（0.02–0.28💲）、
+                  Gemini-3-Pro（0.03–0.12💲）、GPT-5/5.1（0.03💲）。
+                </div>
+                <div class="link-group">
+                  <span class="tag-pill"><strong>注册</strong><span>🤫</span></span>
+                  <a href="https://api.chenmoai.cn/register?aff=1F3b" target="_blank" rel="noopener noreferrer">
+                    https://api.chenmoai.cn/register?aff=1F3b
+                  </a>
+                  <span class="tag-pill"><strong>OpenAI 兼容</strong></span>
+                  <code>https://api.chenmoai.cn/v1</code>
+                </div>
+              </div>
+            </li>
+
+            <li class="rank-item">
+              <div class="rank-number">6</div>
+              <div class="rank-main">
+                <div class="rank-name-row">
+                  <div class="rank-name">Sora API 站</div>
+                  <div class="rank-tag">注册送 3💲 + 拉新 2💲</div>
+                </div>
+                <div class="rank-desc">
+                  主要补充 Gemini-2.5-Pro / 3-Pro，按次价格清晰，可当边缘备用。
+                </div>
+                <div class="rank-models">
+                  <strong>模型：</strong>Gemini-2.5-Pro（Times：0.02–0.08💲/次）、
+                  Gemini-3-Pro（Times：0.1–0.14💲/次）。
+                </div>
+                <div class="link-group">
+                  <span class="tag-pill"><strong>注册</strong><span>🎬</span></span>
+                  <a href="https://api.usora.net/register?aff=jVKg" target="_blank" rel="noopener noreferrer">
+                    https://api.usora.net/register?aff=jVKg
+                  </a>
+                  <span class="tag-pill"><strong>OpenAI 兼容</strong></span>
+                  <code>https://api.usora.net/v1</code>
+                </div>
+              </div>
+            </li>
+          </ol>
+        </section>
+      </section>
+
+      <!-- 右侧：独立平台 + 详情列表 -->
+      <section class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <span>🌟</span>
+            <div>独立羊毛平台（非中转站）</div>
+          </div>
+          <div class="chip-row">
+            <div class="chip">适合薅顶级 GPT / Claude</div>
+            <div class="chip chip-warning">注意项目稳定性与风控</div>
+          </div>
+        </div>
+
+        <ul class="site-list">
+          <li class="site-item">
+            <div class="site-header">
+              <div class="site-name">
+                <span>🏅</span>
+                <span>UniVibe（当前最推荐）</span>
+              </div>
+              <div class="chip">邀请双方各得 3000 积分</div>
+            </div>
+            <div class="site-meta">
+              ✅ 小号不限制，适合多号薅满；支持 GPT / Claude / Gemini 多模型。
+            </div>
+            <div class="site-models">
+              <strong>模型支持：</strong>
+              GPT-5、GPT-5.1、Claude-Sonnet-4.5、Claude-Opus-4.1 等。
+            </div>
+            <div class="site-links">
+              <div class="pill-link">
+                <span class="pill-link-label">注册链接</span>
+                <a href="https://www.univibe.cc/console/auth?type=register&invite=TQPIMU" target="_blank" rel="noopener noreferrer">
+                  https://www.univibe.cc/console/auth?type=register&invite=TQPIMU
+                </a>
+              </div>
+              <div class="pill-link">
+                <span class="pill-link-label">OpenAI 兼容</span>
+                <code>https://api.univibe.cc/openai/v1</code>
+              </div>
+              <div class="pill-link">
+                <span class="pill-link-label">Gemini 接口</span>
+                <code>https://api.univibe.cc/gemini</code>
+              </div>
+            </div>
+          </li>
+
+          <li class="site-item">
+            <div class="site-header">
+              <div class="site-name">
+                <span>⚠️</span>
+                <span>Routha（最新欧洲项目，注意节奏）</span>
+              </div>
+              <div class="chip chip-danger">疑似高风险，建议薅完尽快用掉</div>
+            </div>
+            <div class="site-meta">
+              💰 规则大致为：注册送 5💲 + 官网公告引导进 DC 社区再送 5💲 + 拉新再送 5💲，
+              但小号审核较严，无法无限薅。
+            </div>
+            <div class="site-models">
+              <strong>模型支持：</strong>
+              Claude-Haiku-4.5、Gemini-3.0-Pro（常用主力，价格 4/18）、DeepSeek-V3、Kimi-K2。
+            </div>
+            <div class="site-links">
+              <div class="pill-link">
+                <span class="pill-link-label">注册链接</span>
+                <a href="https://routha.com/signup?ref=OZEJD2DZE6U" target="_blank" rel="noopener noreferrer">
+                  https://routha.com/signup?ref=OZEJD2DZE6U
+                </a>
+              </div>
+              <div class="pill-link">
+                <span class="pill-link-label">OpenAI 兼容</span>
+                <code>https://api.routha.com/v1</code>
+              </div>
+            </div>
+          </li>
+        </ul>
+
+        <section class="section">
+          <h2 class="section-title">
+            <span>🧾</span>API 站一览表（可直接点击）
+          </h2>
+          <ul class="site-list">
+            <li class="site-item">
+              <div class="site-header">
+                <div class="site-name">
+                  <span>🏛️</span>
+                  <span>藏雨阁 API 站</span>
+                </div>
+              </div>
+              <div class="site-meta">
+                规则：注册链接注册送 700💲，每邀请 1 人再送 250💲。
+              </div>
+              <div class="site-models">
+                模型：仅 Gemini-2.5-Pro（约 1💲/次）。
+              </div>
+              <div class="site-links">
+                <div class="pill-link">
+                  <span class="pill-link-label">注册链接</span>
+                  <a href="http://www.guqinghan.icu/register?aff=AqyG" target="_blank" rel="noopener noreferrer">
+                    http://www.guqinghan.icu/register?aff=AqyG
+                  </a>
+                </div>
+                <div class="pill-link">
+                  <span class="pill-link-label">OpenAI 兼容</span>
+                  <code>http://www.guqinghan.icu/v1</code>
+                </div>
+              </div>
+            </li>
+
+            <li class="site-item">
+              <div class="site-header">
+                <div class="site-name">
+                  <span>🎬</span>
+                  <span>Sora API 站</span>
+                </div>
+              </div>
+              <div class="site-meta">
+                规则：注册链接注册送 3💲，邀请 1 人送 2💲。
+              </div>
+              <div class="site-models">
+                模型：Gemini-2.5-Pro（Times 0.02–0.08💲/次）、Gemini-3-Pro（Times 0.1–0.14💲/次）。
+              </div>
+              <div class="site-links">
+                <div class="pill-link">
+                  <span class="pill-link-label">注册链接</span>
+                  <a href="https://api.usora.net/register?aff=jVKg" target="_blank" rel="noopener noreferrer">
+                    https://api.usora.net/register?aff=jVKg
+                  </a>
+                </div>
+                <div class="pill-link">
+                  <span class="pill-link-label">OpenAI 兼容</span>
+                  <code>https://api.usora.net/v1</code>
+                </div>
+              </div>
+            </li>
+
+            <li class="site-item">
+              <div class="site-header">
+                <div class="site-name">
+                  <span>🎭</span>
+                  <span>哈基米半公益 API 站</span>
+                </div>
+              </div>
+              <div class="site-meta">
+                规则：注册链接注册送 400💲，邀请 1 人送 140💲。
+              </div>
+              <div class="site-models">
+                模型：Gemini-2.5-Pro（官逆 3💲 / 满血 5💲）、Gemini-3-Pro（5💲）、
+                GPT-5（8💲）、GPT-5.1（4💲）。
+              </div>
+              <div class="site-links">
+                <div class="pill-link">
+                  <span class="pill-link-label">注册链接</span>
+                  <a href="https://api.gemai.cc/register?aff=Xc8B" target="_blank" rel="noopener noreferrer">
+                    https://api.gemai.cc/register?aff=Xc8B
+                  </a>
+                </div>
+                <div class="pill-link">
+                  <span class="pill-link-label">OpenAI 兼容</span>
+                  <code>https://api.gemai.cc/v1</code>
+                </div>
+              </div>
+            </li>
+
+            <li class="site-item">
+              <div class="site-header">
+                <div class="site-name">
+                  <span>🤫</span>
+                  <span>沉默 API 站</span>
+                </div>
+              </div>
+              <div class="site-meta">
+                规则：注册链接注册送 3💲，邀请 1 人送 2💲。
+              </div>
+              <div class="site-models">
+                模型：Gemini-2.5-Pro（0.02–0.28💲）、Gemini-3-Pro（0.03–0.12💲）、
+                GPT-5/5.1（0.03💲）。
+              </div>
+              <div class="site-links">
+                <div class="pill-link">
+                  <span class="pill-link-label">注册链接</span>
+                  <a href="https://api.chenmoai.cn/register?aff=1F3b" target="_blank" rel="noopener noreferrer">
+                    https://api.chenmoai.cn/register?aff=1F3b
+                  </a>
+                </div>
+                <div class="pill-link">
+                  <span class="pill-link-label">OpenAI 兼容</span>
+                  <code>https://api.chenmoai.cn/v1</code>
+                </div>
+              </div>
+            </li>
+
+            <li class="site-item">
+              <div class="site-header">
+                <div class="site-name">
+                  <span>🐼</span>
+                  <span>熊猫 API 站</span>
+                </div>
+              </div>
+              <div class="site-meta">
+                规则：注册链接注册送 200💲，邀请 1 人送 100💲。
+              </div>
+              <div class="site-models">
+                模型：Gemini-2.5-Pro（按次 5–15💲，按量更便宜）、
+                Gemini-3-Pro（按次 17–29💲，按量更便宜）、GPT-5（5💲）。
+              </div>
+              <div class="site-links">
+                <div class="pill-link">
+                  <span class="pill-link-label">注册链接</span>
+                  <a href="https://api520.pro/register?aff=dL62" target="_blank" rel="noopener noreferrer">
+                    https://api520.pro/register?aff=dL62
+                  </a>
+                </div>
+                <div class="pill-link">
+                  <span class="pill-link-label">OpenAI 兼容</span>
+                  <code>https://api520.pro/v1</code>
+                  <code>https://api521.pro/v1</code>
+                  <code>https://api522.pro/v1</code>
+                </div>
+              </div>
+            </li>
+
+            <li class="site-item">
+              <div class="site-header">
+                <div class="site-name">
+                  <span>🍍</span>
+                  <span>菠萝 API 站</span>
+                </div>
+              </div>
+              <div class="site-meta">
+                规则：注册链接注册送 200💲，邀请 1 人送 30💲。
+              </div>
+              <div class="site-models">
+                模型：Gemini-2.5-Pro（1–7💲）、Gemini-3-Pro（9💲）、Grok-4.1（3💲）。
+              </div>
+              <div class="site-links">
+                <div class="pill-link">
+                  <span class="pill-link-label">注册链接</span>
+                  <a href="https://www.boluoapi.cn/register?aff=WHo1" target="_blank" rel="noopener noreferrer">
+                    https://www.boluoapi.cn/register?aff=WHo1
+                  </a>
+                </div>
+                <div class="pill-link">
+                  <span class="pill-link-label">OpenAI 兼容</span>
+                  <code>http://172.98.22.45:3000/v1</code>
+                  <code>https://www.boluoapi.cn/v1</code>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </section>
+      </section>
+    </section>
+
+    <footer class="footer">
+      <span>整理：黄泉上的夕阳</span>
+      <span>最后更新时间：2025-11-27 11:10</span>
+      <span>由 claude-sonnet-4-5-20250929 协助生成</span>
+    </footer>
+  </main>
+</body>
+</html>
